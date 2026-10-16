@@ -18,8 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install (no deps)
-        run: pip install -e .
+      - name: Install (with test extra)
+        run: pip install -e ".[test]"
       - name: Run tests
         run: python -m pytest -q
       - name: Smoke test CLI
