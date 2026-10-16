@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diffblast"
+version = "0.1.0"
+description = "Know exactly what your change breaks before you push — compute the blast radius of git changes and recommend which tests to run."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["git", "diff", "impact-analysis", "tests", "blast-radius", "ci", "developer-tools"]
+authors = [{ name = "diffblast contributors" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+
+[project.urls]
+Homepage = "https://github.com/diffblast/diffblast"
+Repository = "https://github.com/diffblast/diffblast"
+Issues = "https://github.com/diffblast/diffblast/issues"
+
+[project.scripts]
+diffblast = "diffblast.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["diffblast*"]
+
+[project.optional-dependencies]
+test = ["pytest"]
