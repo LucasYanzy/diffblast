@@ -1,143 +1,96 @@
-# diffblast
+<p align="center"><img src="assets/logo.svg" width="72" height="72" alt="diffblast logo"></p>
+<h1 align="center">diffblast</h1>
+<p align="center"><strong>Estimate change impact before choosing which tests to run.</strong></p>
 
-> **Know exactly what your change breaks — before you push.**
-> Compute the blast radius of your git changes and get a precise list of which tests to run. Zero config, zero dependencies, runs fully offline in seconds.
+[![CI](https://github.com/LucasYanzy/diffblast/actions/workflows/ci.yml/badge.svg)](https://github.com/LucasYanzy/diffblast/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/source-v0.1.0-6b7280.svg)](https://github.com/LucasYanzy/diffblast/blob/main/pyproject.toml) ![Runtime](https://img.shields.io/badge/Python-3.8%2B-3776ab.svg) [![Stars](https://img.shields.io/github/stars/LucasYanzy/diffblast?style=flat)](https://github.com/LucasYanzy/diffblast/stargazers)
 
----
+[English](README.md) · [简体中文](README.zh-CN.md)
+
+![Real CLI output on synthetic fixtures](assets/demo.gif)
+
+The demo is captured from the real CLI using synthetic data. [Transcript](demo/terminal.txt) · regenerate with `python3 scripts/demo.py`.
 
 ## Why
 
-You touch `src/core/math.py`. Does it break `checkout`? `pricing`? Some test three packages away?
-Running the whole suite is slow; guessing is risky. `diffblast` traces your change through the
-real dependency graph **and** your git history, then tells you exactly what's impacted and which
-tests actually matter.
+A small edit can affect files you never opened. diffblast combines local import relationships and Git co-change history to suggest where to look next.
 
-```text
-$ diffblast
-diffblast — change blast radius
+| Start with | Good for | Where diffblast helps |
+|---|---|---|
+| `git diff` | See changed lines | diffblast also estimates related files and tests. |
+| Full test suite | Validate behavior | diffblast suggests review targets; it does not execute tests. |
 
-Changed files : 1
-Blast radius  : 5 files
-Tests to run  : 2
-Risk          : Medium (26/100)
-
-Changed
-  • src/core/math.py
-
-Impacted (beyond what you touched)
-  • src/app.py          [import]
-  • src/utils/calc.py   [import]
-  • tests/test_math.py  [import]
-  • tests/test_calc.py  [import]
-
-Recommended tests
-  ✓ tests/test_calc.py
-  ✓ tests/test_math.py
-```
-
----
-
-## Install
-
-One command, no dependencies, no network:
+## Quick start
 
 ```bash
-pip install diffblast
+git clone https://github.com/LucasYanzy/diffblast.git && cd diffblast
+python3 -m pip install .
+python3 scripts/demo.py
 ```
 
-Or run it without installing (Python ≥ 3.8 already on your machine):
-
-```bash
-python -m diffblast
-```
-
-(Clone first: `git clone https://github.com/diffblast/diffblast && cd diffblast && pip install -e .`)
-
----
-
-## Usage
-
-Run inside any git repo after you've made changes:
-
-```bash
-diffblast                 # analyze working tree vs auto-detected base branch
-diffblast --base main     # compare against a specific branch
-diffblast --json          # machine-readable output for CI
-diffblast --md --out report.md   # save a Markdown report
-diffblast --no-cochange   # skip git-history mining (fastest)
-```
-
-Works on uncommitted changes **and** committed changes on your branch vs `main`.
-
----
-
-## How it works
-
-1. **Changed files** — from `git status` (uncommitted) + `git diff` vs your base branch.
-2. **Dependency graph** — per-language import/include extraction (Python, JS/TS, Go, Rust,
-   Java, C/C++, Ruby, PHP, C#) resolved to real repo files.
-3. **Co-change graph** — mined from `git log`: files that keep changing together are treated
-   as weakly coupled.
-4. **Blast radius** — reverse BFS from your changed files over the dependency + co-change
-   graph. Every file reached is something your change can break.
-5. **Test recommendation** — test files inside the blast radius, plus name-based
-   source→test pairing.
-
-No LLM, no server, no data leaves your machine.
-
----
+Install from this checkout to use the reviewed source version. The installed tool has no third-party runtime dependencies; cloning and installation can require network access.
 
 ## Features
 
-- 🔍 **Precise impact** — follows real imports, not just file names.
-- 🧪 **Test targeting** — run only the tests that can actually fail.
-- 🕰️ **History-aware** — `git log` co-change detection catches what static analysis misses.
-- 📦 **Multi-language** — Python, JS/TS, Go, Rust, Java, C/C++, Ruby, PHP, C#.
-- 🚀 **CI-ready** — `--json` output pipes straight into your pipeline.
-- 🪶 **Zero dependencies** — pure Python stdlib; installs anywhere instantly.
-- 🔒 **Private by default** — everything runs locally, offline.
+### Trace imports
 
----
+Extract imports and includes from tracked files, then follow reverse dependency edges. Resolution is heuristic, not a compiler.
 
-## Comparison
+### Use change history
 
-| Tool | Scope | Depends on LLM | Config | Local-only | Deps |
-|------|-------|---------------|--------|------------|------|
-| **diffblast** | Blast radius + test targeting | No | None | Yes | 0 |
-| `git diff` | Changed files only | No | None | Yes | 0 |
-| IDE "find usages" | Manual, per-symbol | No | IDE | Yes | heavy |
-| Generic impact tools | Single ecosystem / heavy setup | Often | Yes | Varies | many |
-| "run all tests" | Whole suite | No | None | Yes | 0 |
+Include files that repeatedly changed together. Disable this signal with `--no-cochange`.
 
----
+### Suggest tests
 
-## FAQ
+List impacted test files and source/test filename matches. Recommendations do not prove that other tests are safe to skip.
 
-**Does it need an LLM or API key?** No. It's pure static + git-history analysis.
+### Export results
 
-**Does it upload my code?** Never. Everything runs locally.
+Print a terminal report, emit JSON, or write Markdown for review.
 
-**My language isn't detected well.** Resolution is heuristic (import paths). Open an issue or
-PR — adding a language is ~20 lines (see `CONTRIBUTING.md`).
+![CLI result](assets/demo.png)
 
-**What's the "Risk" score?** A 0–100 heuristic from blast-radius spread and co-change density:
-`Low` (<25), `Medium` (<60), `High` (≥60). It's a nudge, not a guarantee.
+## Usage
 
-**Does it work on huge repos?** Yes; history mining is capped (`--max-commits`, default 300)
-and dependency extraction is file-by-file.
+```bash
+diffblast --path /path/to/project --base main
+diffblast --json
+diffblast --md --out report.md
+diffblast --no-cochange
+```
 
----
+## Architecture
+
+```mermaid
+flowchart LR
+A[Git diff and tracked files] --> B[Import graph]
+A --> C[Co-change history]
+B --> D[Reverse reachability]
+C --> D
+D --> E[Test suggestions and reports]
+```
+
+## Privacy and limits
+
+Reads the selected local repository and Git history. It makes no application network calls. Exported reports contain repository file paths; review them before sharing. See [PRIVACY.md](PRIVACY.md) for data boundaries.
+
+## Development
+
+```bash
+python3 -m pip install -e ".[test]"
+python3 -m pytest -q
+```
+
+The demo uses a temporary fixture and does not inspect your personal repositories or agent homes.
 
 ## Roadmap
 
-- [ ] VS Code / Cursor extension (inline blast radius on save)
-- [ ] Pre-commit hook mode (`diffblast --hook` fails CI if risky files untested)
-- [ ] More languages & build-system-aware resolution (Bazel, monorepos)
-- [ ] SARIF / JUnit output for CI dashboards
-- [ ] Optional LLM explainer (`--explain`, off by default)
+- [ ] Improve import resolution across ecosystems.
+- [ ] Add documented CI recipes and structured output formats.
 
----
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Report reproducible problems in [Issues](https://github.com/LucasYanzy/diffblast/issues). Follow [SECURITY.md](SECURITY.md) for sensitive reports.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE).

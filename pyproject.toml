@@ -23,9 +23,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/diffblast/diffblast"
-Repository = "https://github.com/diffblast/diffblast"
-Issues = "https://github.com/diffblast/diffblast/issues"
+Homepage = "https://github.com/LucasYanzy/diffblast"
+Repository = "https://github.com/LucasYanzy/diffblast"
+Issues = "https://github.com/LucasYanzy/diffblast/issues"
 
 [project.scripts]
 diffblast = "diffblast.cli:main"

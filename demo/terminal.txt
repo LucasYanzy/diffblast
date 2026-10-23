@@ -1,0 +1,23 @@
+$ diffblast --no-color
+
+diffblast — change blast radius
+
+Changed files : 2
+Blast radius  : 3 files
+Tests to run  : 1
+Risk          : Low (14/100)
+
+Changed
+  • src/core.py
+  • tests/test_core.py
+
+Impacted (beyond what you touched)
+  • src/app.py  [import]
+
+Recommended tests
+  ✓ tests/test_core.py
+
+Likely-related tests (by name)
+  src/core.py -> tests/test_core.py
+
+
